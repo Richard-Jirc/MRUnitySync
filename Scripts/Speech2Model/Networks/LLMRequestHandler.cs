@@ -42,10 +42,10 @@ public class LLMRequestHandler : MonoBehaviour
             
 
             JObject response = JObject.Parse(request.downloadHandler.text);
-            Debug.Log(response.ToString(Formatting.Indented));
+            Debug.Log(response["choices"][0]["message"]);
         }
     }
-    
+
 
 
     #region GPT ReqBody Process
