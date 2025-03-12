@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Text;
-using Newtonsoft.Json;
 using System.IO;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 public class LLMRequestHandler : MonoBehaviour
 {
@@ -12,15 +14,20 @@ public class LLMRequestHandler : MonoBehaviour
     [SerializeField] private string GPT_KeyPath;
     private string GPT_Key;
 
-    public void SendLLMRequest(string prompt)
+
+    #region PUBLIC METHODS
+    public void SendLLMRequest(string model, string prompt)
     {
-        StartCoroutine(GPTRequest(prompt));
+        StartCoroutine(GPTRequest(model, prompt));
     }
+    #endregion
 
 
-    private IEnumerator GPTRequest(string prompt)
+
+
+    private IEnumerator GPTRequest(string model, string prompt)
     {
-        string jsonData = _packBody_GPT("gpt-4o", prompt);
+        string jsonData = _packBody_GPT(model, prompt);
 
         byte[] postData = Encoding.UTF8.GetBytes(jsonData);
 
@@ -33,10 +40,12 @@ public class LLMRequestHandler : MonoBehaviour
 
             yield return request.SendWebRequest();
             
-            Debug.Log(request.downloadHandler.text);
+
+            JObject response = JObject.Parse(request.downloadHandler.text);
+            Debug.Log(response.ToString(Formatting.Indented));
         }
     }
-
+    
 
 
     #region GPT ReqBody Process
@@ -54,6 +63,44 @@ public class LLMRequestHandler : MonoBehaviour
         };
         return JsonConvert.SerializeObject(requestBody, Formatting.None);
     }
+    /* Response Example
+    {
+        "id": "chatcmpl-BAHMcSvzIPmOxCg8zyR3XP46P77an",
+        "object": "chat.completion",
+        "created": 1741789726,
+        "model": "gpt-4o-2024-08-06",
+        "choices": [
+            {
+            "index": 0,
+            "message": {
+                "role": "assistant",
+                "content": "Why did the AI bring a ladder to the computer?  \n  \nIt wanted to reach the high-speed internet!",
+                "refusal": null,
+                "annotations": []
+            },
+            "logprobs": null,
+            "finish_reason": "stop"
+            }
+        ],
+        "usage": {
+            "prompt_tokens": 22,
+            "completion_tokens": 22,
+            "total_tokens": 44,
+            "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "audio_tokens": 0,
+            "accepted_prediction_tokens": 0,
+            "rejected_prediction_tokens": 0
+            }
+        },
+        "service_tier": "default",
+        "system_fingerprint": "fp_f9f4fb6dbf"
+    }
+    */
     #endregion
 
 
@@ -75,15 +122,19 @@ public class LLMRequestHandler : MonoBehaviour
 
 
     #region LIFE CYCLE
-    
+    public static LLMRequestHandler Instance { get; private set; }
+
     void Awake()
     {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+
         LoadApiKey();
     }
 
     void Start()
     {
-        SendLLMRequest("Say a joke of yourself.");
+        SendLLMRequest("gpt-4o", "Say a joke of yourself.");
     }
 
     #endregion

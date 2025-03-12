@@ -10,13 +10,16 @@ public class ShapeRecorder : MonoBehaviour
     [SerializeField] private Transform SearchFolder;
 
 
-    private void GetAllShapes()
+    #region PUBLIC METHOD
+    public void GetAllShapes()
     {
         foreach(Transform child in SearchFolder)
         {
             
         }
     }
+    #endregion
+
 
 
     #region LIFE CYCLE
