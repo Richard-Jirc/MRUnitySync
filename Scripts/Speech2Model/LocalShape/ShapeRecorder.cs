@@ -14,7 +14,7 @@ public class ShapeRecorder : MonoBehaviour
     {
         foreach(Transform child in SearchFolder)
         {
-            Debug.Log(child.name);
+            
         }
     }
 
@@ -25,7 +25,7 @@ public class ShapeRecorder : MonoBehaviour
         GetAllShapes();
     }
 
-
+    // Create Singleton
     public static ShapeRecorder Instance { get; private set; }
     void Awake()
     {
