@@ -1,16 +1,18 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Text;
 using System.IO;
 
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
-using System.Net.Http;
+
+
 
 /// <summary>
-/// Singleton.
+/// Singleton. Exposes all request public method for LLM APIs. <br/>
+/// Use "Instance" to get methods.
 /// </summary>
 public class LLMRequestHandler : MonoBehaviour
 {
@@ -19,11 +21,16 @@ public class LLMRequestHandler : MonoBehaviour
     private string GPT_Key;
 
 
+    /// <summary>
+    /// Async Method. Call GPT api with model and chat history.
+    /// </summary>
+    /// <param name="model"></param>
+    /// <param name="chatArray"></param>
+    /// <returns>Task with JObject</returns>
     public async Task<JObject> AskGPT(string model, JArray chatArray)
     {
         return await GPTRequest_Async(model, chatArray);
     }
-    
 
 
 
@@ -73,7 +80,7 @@ public class LLMRequestHandler : MonoBehaviour
     #region PRIVATE METHODS
 
     /// <summary>
-    /// Async Method. Call GPT api with model and chat history
+    /// Async Method. Private implementation of POST request to api.
     /// </summary>
     /// <param name="model">Model Name</param>
     /// <param name="chatArray">Chat History</param>
