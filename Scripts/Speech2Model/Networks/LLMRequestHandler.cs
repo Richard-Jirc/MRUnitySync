@@ -7,6 +7,9 @@ using System.IO;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
+using System.Net.Http;
+using System;
 
 /// <summary>
 /// Singleton.
@@ -16,42 +19,78 @@ public class LLMRequestHandler : MonoBehaviour
     [SerializeField] private const string GPT_Url = "https://api.openai.com/v1/chat/completions";
     [SerializeField] private string GPT_KeyPath;
     private string GPT_Key;
-
+    private static readonly HttpClient httpClient_GPT = new HttpClient();
 
     #region PUBLIC METHODS
-    public void AskGPT(string model, JArray chatArray)
+    // public void AskGPT(string model, JArray chatArray)
+    // {
+    //     StartCoroutine(GPTRequest(model, chatArray));
+    // }
+
+
+    public async Task<string> AskGPT(string model, JArray chatArray)
     {
-        StartCoroutine(GPTRequest(model, chatArray));
-    }
-
-    #endregion
-
-
-
-
-    private IEnumerator GPTRequest(string model, JArray chatArray)
-    {
+        // POST request body definition.
         string jsonData = new JObject
         {
             ["model"] = model,
             ["messages"] = chatArray
         }.ToString();
-
-        byte[] postData = Encoding.UTF8.GetBytes(jsonData);
-
-        using (UnityWebRequest request = new UnityWebRequest(GPT_Url, "POST"))
+        
+        using (var request = new HttpRequestMessage(HttpMethod.Post, GPT_Url))
         {
-            request.uploadHandler = new UploadHandlerRaw(postData);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
-            request.SetRequestHeader("Authorization", "Bearer " + GPT_Key);
+            request.Headers.Add("Authorization", "Bearer " + GPT_Key);
+            request.Content = new StringContent(jsonData, Encoding.UTF8, "application/json");
 
-            yield return request.SendWebRequest();
-            
-            JObject response = JObject.Parse(request.downloadHandler.text);
-            Debug.Log(response.ToString());
+            try
+            {
+                HttpResponseMessage response = await httpClient_GPT.SendAsync(request);
+                string responseText = await response.Content.ReadAsStringAsync();
+                
+                // Request Error Code
+                if (!response.IsSuccessStatusCode)
+                {
+                    EventManager.HandleError($"GPT Request Failed with {response.StatusCode}");
+                    return null;
+                }
+
+                JObject jsonResponse = JObject.Parse(responseText);
+                Debug.Log("GPT Request Success: " + jsonResponse.ToString());
+
+                return "test";
+            }
+            catch (Exception error)
+            {
+                EventManager.HandleError($"Ask GPT Failed with {error.Message}");
+                return null;
+            }
         }
     }
+    #endregion
+
+    // private IEnumerator GPTRequest(string model, JArray chatArray)
+    // {
+    //     string jsonData = new JObject
+    //     {
+    //         ["model"] = model,
+    //         ["messages"] = chatArray
+    //     }.ToString();
+
+    //     byte[] postData = Encoding.UTF8.GetBytes(jsonData);
+
+    //     using (UnityWebRequest request = new UnityWebRequest(GPT_Url, "POST"))
+    //     {
+    //         request.uploadHandler = new UploadHandlerRaw(postData);
+    //         request.downloadHandler = new DownloadHandlerBuffer();
+    //         request.SetRequestHeader("Content-Type", "application/json");
+    //         request.SetRequestHeader("Authorization", "Bearer " + GPT_Key);
+
+    //         yield return request.SendWebRequest();
+            
+    //         JObject response = JObject.Parse(request.downloadHandler.text);
+    //         Debug.Log( response.ToString());
+    //     }
+    // }
 
 
     
@@ -101,8 +140,21 @@ public class LLMRequestHandler : MonoBehaviour
                 ["content"] = "What is wrong with you?"
             },
         };
-        AskGPT("gpt-4o", chatHistory);
+        
+        StartCoroutine(ChatWithGPT(chatHistory));
     }
+
+
+    private IEnumerator ChatWithGPT(JArray chatHistory)
+    {
+        Task<string> gptResult = AskGPT("gpt-4o", chatHistory);
+        Debug.Log("Launched");
+
+        yield return new WaitUntil(() => gptResult.IsCompleted);
+        
+        Debug.Log("Result Received" + gptResult.Result);
+    }
+
 
     #endregion
 }
