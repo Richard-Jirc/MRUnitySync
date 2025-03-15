@@ -26,8 +26,8 @@ public class LLMRequestHandler : MonoBehaviour
     /// </summary>
     /// <param name="model"></param>
     /// <param name="chatArray"></param>
-    /// <returns>Task with JObject</returns>
-    public async Task<JObject> AskGPT(string model, JArray chatArray)
+    /// <returns>Task with JObject, full response.</returns>
+    public async Task<JObject> AskLLM(string model, JArray chatArray)
     {
         return await GPTRequest_Async(model, chatArray);
     }
@@ -46,32 +46,7 @@ public class LLMRequestHandler : MonoBehaviour
     }
 
     void Start()
-    {
-
-
-        // JArray chatHistory = new JArray
-        // {
-        //     new JObject {
-        //         ["role"] = "developer",
-        //         ["content"] = "You are a very rude person and do not lose any quarrels!"
-        //     },
-        //     new JObject {
-        //         ["role"] = "user",
-        //         ["content"] = "What is wrong with you?"
-        //     },
-        // };
-        
-        // ChatWithGPT(chatHistory);
-    }
-
-
-    // private async void ChatWithGPT(JArray chatHistory)
-    // {
-    //     Debug.Log("Launched");
-    //     JObject gptResult = await AskGPT("gpt-4o", chatHistory);
-    //     Debug.Log("Result Received: " + gptResult.ToString());
-    // }
-
+    {}
 
     #endregion
 
@@ -84,7 +59,11 @@ public class LLMRequestHandler : MonoBehaviour
     /// </summary>
     /// <param name="model">Model Name</param>
     /// <param name="chatArray">Chat History</param>
-    /// <returns>Json Object of full response</returns>
+    /// <returns>
+    /// Full response<br/>
+    /// return JObject if √.<br/>
+    /// return NULL if request failed.
+    /// </returns>
     private async Task<JObject> GPTRequest_Async(string model, JArray chatArray)
     {
         string jsonData = new JObject
